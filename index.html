@@ -71,7 +71,7 @@ function Card({ children, style }) {
   );
 }
 
-function Ticket({ label, value, sub, accent, trendVal }) {
+function Ticket({ label, value, sub, accent, trendVal, trendLabel }) {
   return (
     <div style={{
       background: COLORS.panel,
@@ -86,7 +86,7 @@ function Ticket({ label, value, sub, accent, trendVal }) {
       {sub && <div style={{ fontSize: 12.5, color: COLORS.ink, opacity: 0.75, marginTop: 3 }}>{sub}</div>}
       {trendVal !== undefined && (
         <div style={{ fontSize: 12, marginTop: 6, fontWeight: 700, color: trendVal < 0 ? COLORS.danger : COLORS.good }}>
-          {trendVal < 0 ? "▼" : trendVal > 0 ? "▲" : "▬"} {Math.abs(trendVal).toFixed(2)} vs Maret
+          {trendVal < 0 ? "▼" : trendVal > 0 ? "▲" : "▬"} {Math.abs(trendVal).toFixed(2)} {trendLabel || ""}
         </div>
       )}
     </div>
@@ -166,6 +166,8 @@ function Dashboard() {
   const d = DASHBOARD_DATA;
   const MONTHS = d.monthly_overall.map(m => m.bulan);
   const LATEST_MONTH = MONTHS[MONTHS.length - 1];
+  const MONTH_ORDER_FULL = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const NEXT_MONTH_NAME = MONTH_ORDER_FULL[(MONTH_ORDER_FULL.indexOf(LATEST_MONTH) + 1) % 12];
   const [brandFilter, setBrandFilter] = useState("Semua");
   const [monthFilter, setMonthFilter] = useState(LATEST_MONTH);
   const [tab, setTab] = useState("overview");
@@ -336,7 +338,7 @@ function Dashboard() {
       <div style={{ padding: "22px 28px 0 28px" }}>
         {/* TICKETS ROW */}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px,1fr))", gap: 14, marginBottom: 26 }}>
-          <Ticket label={`Rata-rata Skor · ${monthFilter}`} value={selectedMonthAvg} sub={`dari skala 1–5 · n=${selectedMonthAvgObj.n} penilaian`} accent={COLORS.brandDark} trendVal={overallTrend} />
+          <Ticket label={`Rata-rata Skor · ${monthFilter}`} value={selectedMonthAvg} sub={`dari skala 1–5 · n=${selectedMonthAvgObj.n} penilaian`} accent={COLORS.brandDark} trendVal={overallTrend} trendLabel={`vs ${MONTHS[0]}`} />
           <Ticket label={`Tren ${MONTHS.length} Bulan`} value={`${firstMonthAvg} → ${selectedMonthAvg}`} sub={`${MONTHS[0]} menuju ${monthFilter}`} accent={overallTrend < 0 ? COLORS.danger : COLORS.good} />
           <Ticket label="Divisi Perlu Perhatian" value={filteredDivisionJuni[0]?.divisi.split(" (")[0] || "-"} sub={`skor ${filteredDivisionJuni[0]?.rata2 ?? "-"} — terendah ${monthFilter}`} accent={COLORS.warn} />
           <Ticket label="Divisi Terbaik" value={filteredDivisionJuni[filteredDivisionJuni.length-1]?.divisi.split(" (")[0] || "-"} sub={`skor ${filteredDivisionJuni[filteredDivisionJuni.length-1]?.rata2 ?? "-"} — ${monthFilter}`} accent={COLORS.good} />
@@ -376,7 +378,7 @@ function Dashboard() {
             </Card>
 
             <Card style={{ marginBottom: 20 }}>
-              <SectionTitle eyebrow="Breakdown Kompetensi" title="Tren per Komponen KPI" desc="Semua 5 komponen kompak menurun — Inisiatif & Attitude turun paling dalam." />
+              <SectionTitle eyebrow="Breakdown Kompetensi" title="Tren per Komponen KPI" desc="Bandingkan pergerakan tiap komponen dari bulan ke bulan — arahkan kursor ke grafik untuk lihat angka pastinya." />
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={d.monthly_component} margin={{ left: -10, right: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e8dcc8" />
@@ -661,7 +663,7 @@ function Dashboard() {
 
         {tab === "bahagia" && (
           <Card>
-            <SectionTitle eyebrow="Nilai Perusahaan" title="Pemetaan Data ke Nilai BAHAGIA" desc="Setiap huruf BAHAGIA dikaitkan ke komponen KPI yang paling relevan, plus insight dari data 4 bulan terakhir." />
+            <SectionTitle eyebrow="Nilai Perusahaan" title="Pemetaan Data ke Nilai BAHAGIA" desc={`Setiap huruf BAHAGIA dikaitkan ke komponen KPI yang paling relevan, plus insight dari data ${MONTHS.length} bulan terakhir (${MONTHS[0]}–${LATEST_MONTH}).`} />
             <div style={{ display: "grid", gap: 12 }}>
               {BAHAGIA_MAP.map((v, i) => (
                 <div key={i} style={{
@@ -686,7 +688,7 @@ function Dashboard() {
         {tab === "aksi" && (
           <div style={{ display: "grid", gap: 16 }}>
             <Card>
-              <SectionTitle eyebrow="Fokus Bulan Depan · Juli" title="Rencana Aksi HRD — 1 Bulan ke Depan" desc="Sengaja hanya dibuat untuk 1 bulan ke depan karena data & rencana akan di-update tiap bulan begitu penilaian baru masuk. Detail nama per orang ada di tab Diagnostik Individu." />
+              <SectionTitle eyebrow={`Fokus Bulan Depan · ${NEXT_MONTH_NAME}`} title="Rencana Aksi HRD — 1 Bulan ke Depan" desc="Sengaja hanya dibuat untuk 1 bulan ke depan karena data & rencana akan di-update tiap bulan begitu penilaian baru masuk. Detail nama per orang ada di tab Diagnostik Individu." />
             </Card>
             {NEXT_MONTH_PLAN.map((prog, i) => (
               <Card key={i}>
