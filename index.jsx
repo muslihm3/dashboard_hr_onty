@@ -327,7 +327,13 @@ export default function Dashboard() {
   const [kategoriFilter, setKategoriFilter] = useState("Semua");
   const [expandedRow, setExpandedRow] = useState(null);
 
-  const snapshot = d.monthly_snapshots[monthFilter] || { division_scores: [], division_radar: {}, distribution: [], employees: [] };
+  const rawSnapshot = d.monthly_snapshots[monthFilter] || { division_scores: [], division_radar: {}, distribution: [], employees: [] };
+  // Selalu urutkan naik (terendah -> tertinggi) supaya "terendah/tertinggi" tidak bergantung pada urutan data sumber
+  const snapshot = {
+    ...rawSnapshot,
+    division_scores: [...rawSnapshot.division_scores].sort((a, b) => a.rata2 - b.rata2),
+    employees: [...rawSnapshot.employees].sort((a, b) => a.skor - b.skor),
+  };
 
   const divisionOptions = useMemo(() => {
     const names = snapshot.division_scores.map(x => x.divisi);
@@ -629,7 +635,9 @@ export default function Dashboard() {
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
                     <tr style={{ textAlign: "left", color: COLORS.brandDark, borderBottom: `2px solid ${COLORS.gold}` }}>
-                      <th style={{ padding: "8px 6px" }}>Nama</th><th>Divisi</th><th>Brand</th><th style={{textAlign:"right"}}>Skor</th>
+                      <th style={{ padding: "8px 6px" }}>Nama</th><th>Divisi</th><th>Brand</th>
+                      <th style={{textAlign:"right"}}>P</th><th style={{textAlign:"right"}}>D</th><th style={{textAlign:"right"}}>T</th><th style={{textAlign:"right"}}>I</th><th style={{textAlign:"right"}}>A</th>
+                      <th style={{textAlign:"right"}}>Skor</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -638,12 +646,18 @@ export default function Dashboard() {
                         <td style={{ padding: "7px 6px", fontWeight: 600 }}>{e.nama}</td>
                         <td>{e.divisi}</td>
                         <td>{e.brand}</td>
+                        <td style={{textAlign:"right"}}>{e.performance ?? "-"}</td>
+                        <td style={{textAlign:"right"}}>{e.disiplin ?? "-"}</td>
+                        <td style={{textAlign:"right"}}>{e.teamwork ?? "-"}</td>
+                        <td style={{textAlign:"right"}}>{e.inisiatif ?? "-"}</td>
+                        <td style={{textAlign:"right"}}>{e.attitude ?? "-"}</td>
                         <td style={{ textAlign: "right", fontWeight: 700, color: COLORS.good }}>{e.skor}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              <div style={{fontSize:11.5, color: COLORS.ink, opacity:0.6, marginTop:8}}>P=Performance, D=Disiplin, T=Teamwork, I=Inisiatif, A=Attitude (skala 1–5)</div>
             </Card>
 
             <Card style={{ marginBottom: 20 }}>
